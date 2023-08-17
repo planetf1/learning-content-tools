@@ -16,6 +16,10 @@ classifiers = [
     "License :: OSI Approved :: Apache 2.0 License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+  "yaml",
+  "yaspin"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/frankharkins/learning-content-tools"

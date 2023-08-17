@@ -22,6 +22,8 @@ def sync_notebooks():
         lesson = Lesson(lesson_path, lesson_ids[lesson_path])
         database.push(lesson)
 
+    print("✨ Sync complete! ✨")
+
 
 def parse_yaml(database_name):
     """
