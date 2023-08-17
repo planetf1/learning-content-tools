@@ -1,67 +1,47 @@
-"""
-This script automatically uploads your notebooks to directus.
-Example usage:
-
-    python release.py notebooks/basics/**/*.ipynb
-
-
-Each lesson folder must contain a `directus_info.json` file, which should look
-like this:
-```
-  {
-    "STAGING": {
-      "url": "https://learning-api-dev.quantum-computing.ibm.com",
-      "id": "11845b3b-1acc-4173-b93b-9f7cbcbb552a"
-    }
-  }
-```
-
-Explanation:
-  * "STAGING" is an alias for the database you want to upload to. You'll
-  probably want one for STAGING and one for PRODUCTION
-  * "url" is the URL to the directus database
-  * "id" is the lesson ID, you can get this from the URL of the lesson, which
-  is: `{url}/admin/content/lessons/{lesson_id}`
-
-"""
-import json
 import shutil
 import os
 from pathlib import Path
 from getpass import getpass
 import random
 from dataclasses import dataclass
-from types import SimpleNamespace
 import requests
 import sys
 
 
 @dataclass
 class Lesson:
-    def __init__(self, notebook_path, database):
-        self.path = Path(notebook_path).parents[0]
+    def __init__(self, lesson_path, lesson_id):
+        self.path = Path(lesson_path)
         self.name = self.path.parts[-1]
+        self.id = lesson_id
         self.zip_path = None
 
-        directus_info_path = self.path / "directus_info.json"
-        self.has_directus_info = directus_info_path.exists()
+    # Methods:
+    #   - zip
+    #   - remove zip
 
-        if self.has_directus_info:
-            with open(self.path / "directus_info.json") as file:
-                data = json.loads(file.read())[database]
-                self.directus = SimpleNamespace(**data)
+@dataclass
+class Database:
+    name: str
+    url: str
+
+    # Methods:
+    #   - Get access token
+    #   - Get translation id
+    #   - Upload ZIP
+    #   - Link ZIP
 
 
 def get_access_token(database_url):
     """
-    Either token is in env variable, or we use login details
-    to get temporary access token.
+    Either token is in env variable, or we use login details to get temporary
+    access token.
     """
     if os.environ.get("DIRECTUS_TOKEN", None) is not None:
         print("  * Using saved access token...")
         return os.environ.get("DIRECTUS_TOKEN")
 
-    print("  🔑 Logging in:")
+    print("  🔑 Log in:")
     response = requests.post(
         f"{database_url}/auth/login",
         json=(
@@ -79,7 +59,7 @@ def get_access_token(database_url):
     return token
 
 
-def push_notebook(notebook_path):
+def push_lesson(lesson: Lesson, database: Database):
     """
     Steps:
       1. Get access token from environment variable, or ask for login details
@@ -91,23 +71,18 @@ def push_notebook(notebook_path):
       6. Clean up: delete the zip file from local disk
 
     Args:
-        lesson_path (str): path to folder containing notebook and `directus_info.json`.
+        lesson (Lesson)
+        database (Database)
     """
-    database_name = os.environ.get("DIRECTUS_DATABASE", "STAGING")
-    lesson = Lesson(notebook_path, database_name)
-    if not lesson.has_directus_info:
-        print(f"No `directus_info.json` found for {lesson.name}; skipping...")
-        return
-
-    print(f"Pushing '{lesson.name}' to '{database_name}':")
+    print(f"Pushing '{lesson.name}' to '{database.name}':")
 
     # 1. Sort out auth stuff
-    auth_header = {"Authorization": f"Bearer {get_access_token(lesson.directus.url)}"}
+    auth_header = {"Authorization": f"Bearer {get_access_token(database.url)}"}
 
     # 2. Get ID of english translation (needed for upload)
     print("  * Finding English translation...")
     response = requests.get(
-        f"{lesson.directus.url}/items/lessons/{lesson.directus.id}"
+        f"{database.url}/items/lessons/{lesson.id}"
          "?fields[]=translations.id,translations.languages_code",
         headers=auth_header,
     )
@@ -132,7 +107,7 @@ def push_notebook(notebook_path):
     print(f"  * Uploading `{lesson.zip_path.name}`...")
     with open(lesson.zip_path, "rb") as fileobj:
         response = requests.post(
-            lesson.directus.url + "/files",
+            database.url + "/files",
             files={"file": (fileobj)},
             data={"filename": lesson.zip_path.stem},
             headers=auth_header,
@@ -144,10 +119,10 @@ def push_notebook(notebook_path):
             f"Problem connecting to Directus (error code {response.status_code}."
         )
 
-    print(f"  * Linking upload to lesson {lesson.directus.id}...")
+    print(f"  * Linking upload to lesson {lesson.id}...")
     # 5. Link .zip to content
     response = requests.patch(
-        lesson.directus.url + f"/items/lessons/{lesson.directus.id}",
+        database.url + f"/items/lessons/{lesson.id}",
         json={"translations": [{"id": translation_id, "temporal_file": temp_file_id}]},
         headers=auth_header,
     )

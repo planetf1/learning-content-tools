@@ -6,17 +6,17 @@ Scripts and actions to help maintainers of IBM Quantum Learning content.
 ## Syncing with Directus
 
 To sync your notebooks automatically with the Directus database, you'll need to
-add a `directus_info.json` to the same folder as each notebook.
+add a `directus.conf.yaml` to the root of your content folder.
 
-```json
-# directus_info.json
-# This goes in the same folder as your notebook
-{
-  "STAGING": {
-    "url": "https://learning-api-dev.quantum-computing.ibm.com",
-    "id": "o4845b0b-1acc-4q73-b93b-9f7cbcbb552a"
-  }
-}
+```yaml
+# directus.conf.yaml
+# This goes in the root of your content folder
+lessons:
+ - path: path/to/folder  # path to folder containing the notebook
+   # lesson ID in the staging database:
+   idStaging: 4e85c04a-c2fb-4bfc-9077-b75bf1b73a25
+   # lesson ID in the production database:
+   idProduction: 5026731b-5e7b-4585-8cf2-f24482819e21
 ```
 
 To upload notebooks using our script:
@@ -28,9 +28,15 @@ To upload notebooks using our script:
 2. Run this from the root of your content folder:
 
    ```bash
-   sync-notebooks path/to/notebook
+   sync-notebooks
    ```
    You'll be prompted for your username and password.
+
+You can also upload just one notebook at a time using
+
+```bash
+sync-notebooks path/to/folder
+```
 
 To use this script as part of CI (Travis / GitHub actions), set the
 `DIRECTUS_TOKEN` environment variable to your access token before running the
