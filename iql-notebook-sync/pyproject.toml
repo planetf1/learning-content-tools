@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iql-notebook-sync"
+version = "0.0.1"
+authors = [
+  { name="Frank Harkins", email="frankharkins@hotmail.co.uk" },
+]
+description = "Tool for IBM Quantum Learning content creators to sync notebooks with the database."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache 2.0 License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/frankharkins/learning-content-tools"
+"Bug Tracker" = "https://github.com/frankharkins/learning-content-tools/issues"
+
+[project.scripts]
+sync-notebooks = "iql_notebook_sync:sync_notebooks"
