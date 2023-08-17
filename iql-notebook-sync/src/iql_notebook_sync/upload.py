@@ -45,7 +45,7 @@ class Database:
             print('✅ Found token for "{self.name}"')
             return os.environ.get("DIRECTUS_TOKEN")
 
-        print("\n🔑 Log in:")
+        print(f'\n🔑 Log into "{self.name}":')
         response = requests.post(
             f"{self.url}/auth/login",
             json=(
