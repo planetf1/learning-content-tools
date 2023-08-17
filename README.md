@@ -23,7 +23,7 @@ To upload notebooks using our script:
 
 1. Install the package
    ```bash
-   pip install git+https://github.com/frankharkins/learning-content-tools/iql-notebook-sync
+   pip install git+https://github.com/frankharkins/learning-content-tools.git#subdirectory=iql-notebook-sync
    ```
 2. Run this from the root of your content folder:
 
