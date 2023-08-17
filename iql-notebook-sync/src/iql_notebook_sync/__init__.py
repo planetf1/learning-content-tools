@@ -2,27 +2,25 @@ import sys
 import os
 import yaml
 from pathlib import Path
-from .upload import push_lesson, Lesson, Database
+from .upload import Lesson, Database
 
 CONF_FILE = "./directus.conf.yaml"
-URLS = {
-    "staging": "https://learning-api-dev.quantum-computing.ibm.com"
-}
+URLS = {"staging": "https://learning-api-dev.quantum-computing.ibm.com"}
+
 
 def sync_notebooks():
     database_name = os.environ.get("DIRECTUS_DATABASE", "staging").lower()
-    lesson_ids = parse_yaml(database_name)
+    database = Database(database_name, URLS[database_name])
 
+    lesson_ids = parse_yaml(database_name)
     if len(sys.argv) > 1:
         paths = sys.argv[1:]
     else:
         paths = lesson_ids.keys()
 
     for lesson_path in paths:
-        push_lesson(
-            Lesson(lesson_path, lesson_ids[lesson_path]),
-            Database(database_name, URLS[database_name])
-        )
+        lesson = Lesson(lesson_path, lesson_ids[lesson_path])
+        database.push(lesson)
 
 
 def parse_yaml(database_name):
