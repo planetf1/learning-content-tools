@@ -41,9 +41,9 @@ class Database:
         Either token is in env variable, or we use login details to get temporary
         access token.
         """
-        if os.environ.get("DIRECTUS_TOKEN", None) is not None:
+        if os.environ.get("LEARNING_API_TOKEN", None) is not None:
             print('✅ Found token for "{self.name}"')
-            return os.environ.get("DIRECTUS_TOKEN")
+            return os.environ.get("LEARNING_API_TOKEN")
 
         print(f'\n🔑 Log into "{self.name}":')
         response = requests.post(
@@ -66,7 +66,7 @@ class Database:
         """
         Steps:
           1. Get the translation ID of the English translation (needed for upload)
-          2. Zip the folder containing notebook and images
+          2. Zip the folder containing source files
           3. Upload the zip file to the database
           4. Link the zip file in the database to the lesson
           5. Clean up: delete the zip file from local disk
@@ -110,7 +110,7 @@ class Database:
             temp_file_id = response.json()["data"]["id"]
             if response.status_code != 200:
                 raise Exception(
-                    f"Problem connecting to Directus (error code {response.status_code}."
+                    f"Problem connecting to database (error code {response.status_code}."
                 )
 
             spinner.text = base_msg + f": Linking upload..."
@@ -126,7 +126,7 @@ class Database:
             )
             if response.status_code != 200:
                 raise Exception(
-                    f"Problem connecting to Directus (error code {response.status_code})."
+                    f"Problem connecting to database (error code {response.status_code})."
                 )
         except KeyboardInterrupt:
             spinner.text = base_msg.strip() + ": Cancelled by user"
