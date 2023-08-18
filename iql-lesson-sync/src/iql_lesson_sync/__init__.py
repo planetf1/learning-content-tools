@@ -5,7 +5,10 @@ from pathlib import Path
 from .upload import Lesson, Database
 
 CONF_FILE = "./iql.conf.yaml"
-URLS = {"staging": "https://learning-api-dev.quantum-computing.ibm.com"}
+URLS = {
+    "staging": "https://learning-api-dev.quantum-computing.ibm.com",
+    "production": "learning-api.quantum-computing.ibm.com"
+}
 
 
 def sync_lessons():
