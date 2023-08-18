@@ -4,7 +4,7 @@ import yaml
 from pathlib import Path
 from .upload import Lesson, Database
 
-CONF_FILE = "./database.conf.yaml"
+CONF_FILE = "./iql.conf.yaml"
 URLS = {"staging": "https://learning-api-dev.quantum-computing.ibm.com"}
 
 
@@ -29,7 +29,7 @@ def parse_yaml(database_name):
     """
     Get dict of lesson paths and lesson IDs
     Args:
-        path_to_yaml (str): path to database.conf.yaml
+        path_to_yaml (str): path to iql.conf.yaml
         database_name (str): "staging" or "production"
     Returns:
         dict: { lesson_path: lesson_id }

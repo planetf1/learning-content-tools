@@ -6,16 +6,15 @@ Scripts and actions to help maintainers of IBM Quantum Learning content.
 ## Syncing with the content database
 
 To sync your lessons automatically with the database, you'll need to
-add a `database.conf.yaml` to the root of your content folder.
+add a `iql.conf.yaml` to the root of your content folder.
 
 ```yaml
-# database.conf.yaml
+# iql.conf.yaml
 # This goes in the root of your content folder
 lessons:
  - path: path/to/folder  # path to folder containing the lesson
-   # lesson ID in the staging database:
+   # lesson IDs in the databases:
    idStaging: 4e85c04a-c2fb-4bfc-9077-b75bf1b73a25
-   # lesson ID in the production database:
    idProduction: 5026731b-5e7b-4585-8cf2-f24482819e21
 ```
 
