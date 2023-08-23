@@ -26,7 +26,7 @@ class Lesson:
         )
 
     def delete_zip(self):
-        if self.zip_path.exists():
+        if self.zip_path  and self.zip_path.exists():
             os.remove(self.zip_path)
 
 
@@ -43,7 +43,7 @@ class Database:
         """
         if os.environ.get("LEARNING_API_TOKEN", None) is not None:
             print(f'✅ Found token for "{self.name}"')
-            return os.environ.get("LEARNING_API_TOKEN")
+            return os.environ.get("LEARNING_API_TOKEN").strip()
 
         print(f'\n🔑 Log into "{self.name}":')
         response = requests.post(
@@ -78,30 +78,30 @@ class Database:
         spinner = yaspin(Spinners.dots2, text=base_msg, color="blue")
         spinner.start()
 
-        # 1. Get ID of english translation (needed for upload)
-        spinner.text = base_msg + ": Finding English translation..."
-        response = requests.get(
-            f"{self.url}/items/lessons/{lesson.id}"
-            "?fields[]=translations.id,translations.languages_code",
-            headers=self.auth_header,
-        )
-        if response.status_code != 200:
-            raise Exception(
-                f"Problem connecting to database (error code {response.status_code})."
-            )
-
-        for translation in response.json()["data"]["translations"]:
-            if translation["languages_code"] == "en-US":
-                translation_id = translation["id"]
-                break
-            raise ValueError("No 'en-US' translation found!")
-
-        # 2. Zip file
-        spinner.text = base_msg + ": Zipping folder..."
-        lesson.zip()
-
-        # 3. Upload .zip
         try:
+            # 1. Get ID of english translation (needed for upload)
+            spinner.text = base_msg + ": Finding English translation..."
+            response = requests.get(
+                f"{self.url}/items/lessons/{lesson.id}"
+                "?fields[]=translations.id,translations.languages_code",
+                headers=self.auth_header,
+            )
+            if response.status_code != 200:
+                raise Exception(
+                    f"Problem connecting to database (error code {response.status_code})."
+                )
+
+            for translation in response.json()["data"]["translations"]:
+                if translation["languages_code"] == "en-US":
+                    translation_id = translation["id"]
+                    break
+                raise ValueError("No 'en-US' translation found!")
+
+            # 2. Zip file
+            spinner.text = base_msg + ": Zipping folder..."
+            lesson.zip()
+
+            # 3. Upload .zip
             spinner.text = base_msg + f': Uploading...'
             with open(lesson.zip_path, "rb") as fileobj:
                 response = requests.post(
@@ -132,16 +132,23 @@ class Database:
                 raise Exception(
                     f"Problem connecting to database (error code {response.status_code})."
                 )
+
+            # 5. Clean up zipped file afterwards
+            spinner.text = base_msg + f': Cleaning up...'
+            lesson.delete_zip()
+
+            spinner.text = base_msg.strip()
+
         except KeyboardInterrupt:
             spinner.text = base_msg.strip() + ": Cancelled by user"
             spinner.fail("❌")
             lesson.delete_zip()
             sys.exit()
 
-        # 5. Clean up zipped file afterwards
-        spinner.text = base_msg + f': Cleaning up...'
-        lesson.delete_zip()
+        except Exception as err:
+            lesson.delete_zip()
+            spinner.fail("❌")
+            raise err
 
-        spinner.text = base_msg.strip()
         spinner.ok("✅")
 
