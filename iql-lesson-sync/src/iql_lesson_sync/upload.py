@@ -42,7 +42,7 @@ class Database:
         access token.
         """
         if os.environ.get("LEARNING_API_TOKEN", None) is not None:
-            print('✅ Found token for "{self.name}"')
+            print(f'✅ Found token for "{self.name}"')
             return os.environ.get("LEARNING_API_TOKEN")
 
         print(f'\n🔑 Log into "{self.name}":')
