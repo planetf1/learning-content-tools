@@ -66,8 +66,8 @@ class Database:
         """
         Wrapper for `_push` to handle spinner and Exceptions
         """
-        base_msg = f' Push "{lesson.name}"'
-        spinner = yaspin(Spinners.dots2, text=base_msg, color="blue")
+        base_msg = f'Push "{lesson.name}"'
+        spinner = yaspin(Spinners.dots12, text=base_msg, color="blue")
         spinner.start()
 
         def _log_fn(msg):
@@ -87,7 +87,7 @@ class Database:
             lesson.delete_zip()
             raise err
 
-        spinner.text = base_msg.strip()
+        spinner.text = base_msg
         spinner.ok("✅")
 
     def _push(self, lesson: Lesson, log):
