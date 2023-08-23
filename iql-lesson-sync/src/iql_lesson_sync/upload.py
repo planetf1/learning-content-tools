@@ -1,4 +1,5 @@
 import shutil
+import tempfile
 import os
 from pathlib import Path
 from getpass import getpass
@@ -19,7 +20,7 @@ class Lesson:
     def zip(self):
         self.zip_path = Path(
             shutil.make_archive(
-                self.path / f"{random.randint(0, 1_000_000_000)}_{self.name}",
+                Path(tempfile.gettempdir(), "iql_lesson_sync", self.name),
                 "zip",
                 root_dir=self.path,
             )
