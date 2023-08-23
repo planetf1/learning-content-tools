@@ -85,6 +85,10 @@ class Database:
             "?fields[]=translations.id,translations.languages_code",
             headers=self.auth_header,
         )
+        if response.status_code != 200:
+            raise Exception(
+                f"Problem connecting to database (error code {response.status_code})."
+            )
 
         for translation in response.json()["data"]["translations"]:
             if translation["languages_code"] == "en-US":
@@ -110,7 +114,7 @@ class Database:
             temp_file_id = response.json()["data"]["id"]
             if response.status_code != 200:
                 raise Exception(
-                    f"Problem connecting to database (error code {response.status_code}."
+                    f"Problem connecting to database (error code {response.status_code})."
                 )
 
             spinner.text = base_msg + f": Linking upload..."
