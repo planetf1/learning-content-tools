@@ -26,7 +26,7 @@ class Lesson:
         )
 
     def delete_zip(self):
-        if self.zip_path  and self.zip_path.exists():
+        if self.zip_path and self.zip_path.exists():
             os.remove(self.zip_path)
 
 
@@ -43,7 +43,7 @@ class Database:
         """
         if os.environ.get("LEARNING_API_TOKEN", None) is not None:
             print(f'✅ Found token for "{self.name}"')
-            return os.environ.get("LEARNING_API_TOKEN").strip()
+            return os.environ.get("LEARNING_API_TOKEN")
 
         print(f'\n🔑 Log into "{self.name}":')
         response = requests.post(
@@ -64,6 +64,34 @@ class Database:
 
     def push(self, lesson: Lesson):
         """
+        Wrapper for `_push` to handle spinner and Exceptions
+        """
+        base_msg = f' Push "{lesson.name}"'
+        spinner = yaspin(Spinners.dots2, text=base_msg, color="blue")
+        spinner.start()
+
+        def _log_fn(msg):
+            spinner.text = f"{base_msg}: {msg}"
+
+        try:
+            self._push(lesson, _log_fn)
+
+        except KeyboardInterrupt:
+            _log_fn("Cancelled by user")
+            spinner.fail("❌")
+            lesson.delete_zip()
+            sys.exit()
+
+        except Exception as err:
+            spinner.fail("❌")
+            lesson.delete_zip()
+            raise err
+
+        spinner.text = base_msg.strip()
+        spinner.ok("✅")
+
+    def _push(self, lesson: Lesson, log):
+        """
         Steps:
           1. Get the translation ID of the English translation (needed for upload)
           2. Zip the folder containing source files
@@ -73,82 +101,49 @@ class Database:
 
         Args:
             lesson (Lesson)
+            log (callable): accepts a string to show to user
         """
-        base_msg = f" Push '{lesson.name}'"
-        spinner = yaspin(Spinners.dots2, text=base_msg, color="blue")
-        spinner.start()
+        # 1. Get ID of english translation (needed for upload)
+        log("Finding English translation...")
+        response = requests.get(
+            f"{self.url}/items/lessons/{lesson.id}"
+            "?fields[]=translations.id,translations.languages_code"
+        )
+        response.raise_for_status()
 
-        try:
-            # 1. Get ID of english translation (needed for upload)
-            spinner.text = base_msg + ": Finding English translation..."
-            response = requests.get(
-                f"{self.url}/items/lessons/{lesson.id}"
-                "?fields[]=translations.id,translations.languages_code",
+        for translation in response.json()["data"]["translations"]:
+            if translation["languages_code"] == "en-US":
+                translation_id = translation["id"]
+                break
+            raise ValueError("No 'en-US' translation found!")
+
+        # 2. Zip file
+        log("Zipping folder...")
+        lesson.zip()
+
+        # 3. Upload .zip
+        log("Uploading...")
+        with open(lesson.zip_path, "rb") as fileobj:
+            response = requests.post(
+                self.url + "/files",
+                files={"file": (fileobj)},
+                data={"filename": lesson.zip_path.stem},
                 headers=self.auth_header,
             )
-            if response.status_code != 200:
-                raise Exception(
-                    f"Problem connecting to database (error code {response.status_code})."
-                )
+        response.raise_for_status()
+        temp_file_id = response.json()["data"]["id"]
 
-            for translation in response.json()["data"]["translations"]:
-                if translation["languages_code"] == "en-US":
-                    translation_id = translation["id"]
-                    break
-                raise ValueError("No 'en-US' translation found!")
+        log("Linking upload...")
+        # 4. Link .zip to content
+        response = requests.patch(
+            self.url + f"/items/lessons/{lesson.id}",
+            json={
+                "translations": [{"id": translation_id, "temporal_file": temp_file_id}]
+            },
+            headers=self.auth_header,
+        )
+        response.raise_for_status()
 
-            # 2. Zip file
-            spinner.text = base_msg + ": Zipping folder..."
-            lesson.zip()
-
-            # 3. Upload .zip
-            spinner.text = base_msg + f': Uploading...'
-            with open(lesson.zip_path, "rb") as fileobj:
-                response = requests.post(
-                    self.url + "/files",
-                    files={"file": (fileobj)},
-                    data={"filename": lesson.zip_path.stem},
-                    headers=self.auth_header,
-                )
-
-            temp_file_id = response.json()["data"]["id"]
-            if response.status_code != 200:
-                raise Exception(
-                    f"Problem connecting to database (error code {response.status_code})."
-                )
-
-            spinner.text = base_msg + f": Linking upload..."
-            # 4. Link .zip to content
-            response = requests.patch(
-                self.url + f"/items/lessons/{lesson.id}",
-                json={
-                    "translations": [
-                        {"id": translation_id, "temporal_file": temp_file_id}
-                    ]
-                },
-                headers=self.auth_header,
-            )
-            if response.status_code != 200:
-                raise Exception(
-                    f"Problem connecting to database (error code {response.status_code})."
-                )
-
-            # 5. Clean up zipped file afterwards
-            spinner.text = base_msg + f': Cleaning up...'
-            lesson.delete_zip()
-
-            spinner.text = base_msg.strip()
-
-        except KeyboardInterrupt:
-            spinner.text = base_msg.strip() + ": Cancelled by user"
-            spinner.fail("❌")
-            lesson.delete_zip()
-            sys.exit()
-
-        except Exception as err:
-            lesson.delete_zip()
-            spinner.fail("❌")
-            raise err
-
-        spinner.ok("✅")
-
+        # 5. Clean up zipped file afterwards
+        log("Cleaning up...")
+        lesson.delete_zip()
