@@ -39,4 +39,5 @@ sync-lessons path/to/folder
 
 To use this script as part of CI (Travis / GitHub actions), set the
 `LEARNING_API_TOKEN` environment variable to your access token before running
-the script.
+the script, and `LEARNING_API_NAME` to the name of the database (`staging` or
+`production`, will default to `staging` if not set).
