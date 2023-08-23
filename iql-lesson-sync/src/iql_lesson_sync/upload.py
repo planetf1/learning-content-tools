@@ -46,7 +46,7 @@ class Database:
             print(f'✅ Found token for "{self.name}"')
             return os.environ.get("LEARNING_API_TOKEN")
 
-        print(f'\n🔑 Log into "{self.name}":')
+        print(f'🔑 Log into "{self.name}":')
         response = requests.post(
             f"{self.url}/auth/login",
             json=(

@@ -10,9 +10,34 @@ URLS = {
     "production": "learning-api.quantum-computing.ibm.com"
 }
 
+def get_database_name():
+    """
+    Either from environment token or user
+    """
+    if os.environ.get("LEARNING_API_ENVIRONMENT", False):
+        return os.environ.get("LEARNING_API_ENVIRONMENT").lower()
+
+    if os.environ.get("LEARNING_API_TOKEN", False):
+        raise EnvironmentError(
+                "Set 'LEARNING_API_ENVIRONMENT' variable to 'staging' or "
+                "'production' when using the 'LEARNING_API_TOKEN' environment "
+                "variable. You can unset the token using the command:\n\n    "
+                "unset LEARNING_API_TOKEN\n"
+        )
+
+    response = input("Push to staging or production? (s/p): ").lower()
+    if response in ['s', 'staging']:
+        return 'staging'
+    if response in ['p', 'production']:
+        return 'production'
+    print("Not understood; enter either 's' for staging or 'p' for production.")
+    print("Trying again...")
+    return get_database_name()
+
 
 def sync_lessons():
-    database_name = os.environ.get("LEARNING_API_NAME", "staging").lower()
+    print()
+    database_name = get_database_name()
     database = Database(database_name, URLS[database_name])
 
     lesson_ids = parse_yaml(database_name)
