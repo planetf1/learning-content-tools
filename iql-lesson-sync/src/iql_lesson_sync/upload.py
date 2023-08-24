@@ -108,7 +108,8 @@ class Database:
         log("Finding English translation...")
         response = requests.get(
             f"{self.url}/items/lessons/{lesson.id}"
-            "?fields[]=translations.id,translations.languages_code"
+            "?fields[]=translations.id,translations.languages_code",
+            headers=self.auth_header
         )
         response.raise_for_status()
 
