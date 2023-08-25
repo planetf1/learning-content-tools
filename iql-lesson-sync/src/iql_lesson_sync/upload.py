@@ -43,11 +43,14 @@ class Database:
         Either token is in env variable, or we use login details to get temporary
         access token.
         """
+        # Highlight where we're pushing to avoid accidental push to production
+        color = "\033[93m" if self.name == "production" else "\033[94m"
+
         if os.environ.get("LEARNING_API_TOKEN", None) is not None:
-            print(f'✅ Found token for "{self.name}"')
+            print(f'✅ Found token for {color}\033[1m{self.name}\033[0m')
             return os.environ.get("LEARNING_API_TOKEN")
 
-        print(f'🔑 Log into "{self.name}":')
+        print(f'🔑 Log into {color}\033[1m{self.name}\033[0m:')
         response = requests.post(
             f"{self.url}/auth/login",
             json=(
@@ -61,14 +64,14 @@ class Database:
             print("❌ Couldn't log in 😕")
             sys.exit()
 
-        print(f'✅ Logged into "{self.name}"')
+        print(f'✅ Logged in')
         return response.json()["data"]["access_token"]
 
     def push(self, lesson: Lesson):
         """
         Wrapper for `_push` to handle spinner and Exceptions
         """
-        base_msg = f'Push "{lesson.name}"'
+        base_msg = f'Push \033[1m{lesson.name}\033[0m'
         spinner = yaspin(Spinners.dots12, text=base_msg, color="blue")
         spinner.start()
 
@@ -144,7 +147,7 @@ class Database:
         log("Linking upload...")
         # 4. Link .zip to content
         response = requests.patch(
-            self.url + f"/items/lessons/{lesson.id}",
+            f"{self.url}/items/lessons/{lesson.id}",
             json={
                 "translations": [{"id": translation_id, "temporal_file": temp_file_id}]
             },
