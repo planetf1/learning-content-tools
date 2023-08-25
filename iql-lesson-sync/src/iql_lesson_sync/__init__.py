@@ -5,9 +5,13 @@ from pathlib import Path
 from .upload import Lesson, Database
 
 CONF_FILE = "./iql.conf.yaml"
-URLS = {
+DATABASE_URLS = {
     "staging": "https://learning-api-dev.quantum-computing.ibm.com",
     "production": "learning-api.quantum-computing.ibm.com"
+}
+WEBSITE_URLS = {
+    "staging": "https://learning.www-dev.quantum-computing.ibm.com",
+    "production": "https://learning.quantum-computing.ibm.com"
 }
 
 def get_database_name():
@@ -38,7 +42,7 @@ def get_database_name():
 def sync_lessons():
     print()
     database_name = get_database_name()
-    database = Database(database_name, URLS[database_name])
+    database = Database(database_name, DATABASE_URLS[database_name], WEBSITE_URLS[database_name])
 
     lesson_ids = parse_yaml(database_name)
     if len(sys.argv) > 1:

@@ -32,9 +32,10 @@ class Lesson:
 
 
 class Database:
-    def __init__(self, name, url):
+    def __init__(self, name, database_url, website_url):
         self.name = name
-        self.url = url
+        self.url = database_url
+        self.website_url = website_url
         self.auth_header = {"Authorization": f"Bearer {self.get_access_token()}"}
 
     def get_access_token(self):
@@ -75,7 +76,7 @@ class Database:
             spinner.text = f"{base_msg}: {msg}"
 
         try:
-            self._push(lesson, _log_fn)
+            web_page = self._push(lesson, _log_fn)
 
         except KeyboardInterrupt:
             _log_fn("Cancelled by user")
@@ -91,6 +92,9 @@ class Database:
         spinner.text = base_msg
         spinner.ok("✅")
 
+        print(f"   \033[30m╷\033[0m Web page: \033[96m{web_page}\033[0m")
+        print(f"   \033[30m╵\033[0m Database record: \033[96m{self.url}/admin/content/lessons/{lesson.id}\033[0m")
+
     def _push(self, lesson: Lesson, log):
         """
         Steps:
@@ -103,6 +107,8 @@ class Database:
         Args:
             lesson (Lesson)
             log (callable): accepts a string to show to user
+        Returns:
+            str: URL of lesson on the website
         """
         # 1. Get ID of english translation (needed for upload)
         log("Finding English translation...")
@@ -149,3 +155,21 @@ class Database:
         # 5. Clean up zipped file afterwards
         log("Cleaning up...")
         lesson.delete_zip()
+
+        # 6. Return URLs
+        log("Getting URLs...")
+        response = requests.get(
+            f"{self.url}/items/lessons/{lesson.id}",
+            headers=self.auth_header
+        )
+        response.raise_for_status()
+        lesson_slug = response.json()['data']['slug']
+
+        log("Getting URLs...")
+        response = requests.get(
+            f"{self.url}/items/courses/{response.json()['data']['course']}",
+            headers=self.auth_header
+        )
+        response.raise_for_status()
+        course_slug = response.json()['data']['slug']
+        return f"{self.website_url}/course/{course_slug}/{lesson_slug}"
