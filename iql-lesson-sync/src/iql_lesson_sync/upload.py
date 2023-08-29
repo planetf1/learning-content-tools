@@ -31,10 +31,10 @@ class Lesson:
             os.remove(self.zip_path)
 
 
-class Database:
-    def __init__(self, name, database_url, website_url):
+class API:
+    def __init__(self, name, api_url, website_url):
         self.name = name
-        self.url = database_url
+        self.url = api_url
         self.website_url = website_url
         self.auth_header = {"Authorization": f"Bearer {self.get_access_token()}"}
 
@@ -96,15 +96,15 @@ class Database:
         spinner.ok("✅")
 
         print(f"   \033[30m╷\033[0m Web page: \033[96m{web_page}\033[0m")
-        print(f"   \033[30m╵\033[0m Database record: \033[96m{self.url}/admin/content/lessons/{lesson.id}\033[0m")
+        print(f"   \033[30m╵\033[0m Lesson data: \033[96m{self.url}/admin/content/lessons/{lesson.id}\033[0m")
 
     def _push(self, lesson: Lesson, log):
         """
         Steps:
           1. Get the translation ID of the English translation (needed for upload)
           2. Zip the folder containing source files
-          3. Upload the zip file to the database
-          4. Link the zip file in the database to the lesson
+          3. Upload the zip file to the API
+          4. Link the zip file in the API to the lesson
           5. Clean up: delete the zip file from local disk
 
         Args:

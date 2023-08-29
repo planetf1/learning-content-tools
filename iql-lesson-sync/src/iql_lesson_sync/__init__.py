@@ -2,10 +2,10 @@ import sys
 import os
 import yaml
 from pathlib import Path
-from .upload import Lesson, Database
+from .upload import Lesson, API
 
 CONF_FILE = "./iql.conf.yaml"
-DATABASE_URLS = {
+API_URLS = {
     "staging": "https://learning-api-dev.quantum-computing.ibm.com",
     "production": "learning-api.quantum-computing.ibm.com"
 }
@@ -14,7 +14,7 @@ WEBSITE_URLS = {
     "production": "https://learning.quantum-computing.ibm.com"
 }
 
-def get_database_name():
+def get_api_name():
     """
     Either from environment token or user
     """
@@ -36,15 +36,15 @@ def get_database_name():
         return 'production'
     print("Not understood; enter either 's' for staging or 'p' for production.")
     print("Trying again...")
-    return get_database_name()
+    return get_api_name()
 
 
 def sync_lessons():
     print()
-    database_name = get_database_name()
-    database = Database(database_name, DATABASE_URLS[database_name], WEBSITE_URLS[database_name])
+    api_name = get_api_name()
+    api = API(api_name, API_URLS[api_name], WEBSITE_URLS[api_name])
 
-    lesson_ids = parse_yaml(database_name)
+    lesson_ids = parse_yaml(api_name)
     if len(sys.argv) > 1:
         paths = sys.argv[1:]
     else:
@@ -52,27 +52,27 @@ def sync_lessons():
 
     for lesson_path in paths:
         lesson = Lesson(lesson_path, lesson_ids[lesson_path])
-        database.push(lesson)
+        api.push(lesson)
 
     print("✨ Sync complete! ✨\n")
 
 
-def parse_yaml(database_name):
+def parse_yaml(api_name):
     """
     Get dict of lesson paths and lesson IDs
     Args:
         path_to_yaml (str): path to iql.conf.yaml
-        database_name (str): "staging" or "production"
+        api_name (str): "staging" or "production"
     Returns:
         dict: { lesson_path: lesson_id }
     """
     with open(CONF_FILE) as f:
-        database_info = yaml.safe_load(f.read())
+        api_info = yaml.safe_load(f.read())
 
     output = {}
-    for lesson in database_info["lessons"]:
+    for lesson in api_info["lessons"]:
         path = lesson["path"]
-        lesson_id = lesson[f"id{database_name.lower().capitalize()}"]
+        lesson_id = lesson[f"id{api_name.lower().capitalize()}"]
         output[path] = lesson_id
 
     return output

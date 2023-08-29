@@ -8,7 +8,7 @@ version = "0.0.1"
 authors = [
   { name="Frank Harkins", email="frankharkins@hotmail.co.uk" },
 ]
-description = "Tool for IBM Quantum Learning content creators to sync lessons with the database."
+description = "Tool for IBM Quantum Learning content creators to upload lessons through the API."
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
