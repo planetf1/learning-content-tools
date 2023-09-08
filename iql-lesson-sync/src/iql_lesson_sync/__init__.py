@@ -7,7 +7,7 @@ from .upload import Lesson, API
 CONF_FILE = "./iql.conf.yaml"
 API_URLS = {
     "staging": "https://learning-api-dev.quantum-computing.ibm.com",
-    "production": "learning-api.quantum-computing.ibm.com"
+    "production": "https://learning-api.quantum-computing.ibm.com"
 }
 WEBSITE_URLS = {
     "staging": "https://learning.www-dev.quantum-computing.ibm.com",
