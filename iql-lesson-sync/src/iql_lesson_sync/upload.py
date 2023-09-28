@@ -32,11 +32,12 @@ class Lesson:
 
 
 class API:
-    def __init__(self, name, api_url, website_url):
+    def __init__(self, name, api_url, website_url, hide_urls=False):
         self.name = name
         self.url = api_url
         self.website_url = website_url
         self.auth_header = {"Authorization": f"Bearer {self.get_access_token()}"}
+        self.hide_urls = hide_urls
 
     def get_access_token(self):
         """
@@ -95,8 +96,9 @@ class API:
         spinner.text = base_msg
         spinner.ok("✅")
 
-        print(f"   \033[30m╷\033[0m Web page: \033[96m{web_page}\033[0m")
-        print(f"   \033[30m╵\033[0m Lesson data: \033[96m{self.url}/admin/content/lessons/{lesson.id}\033[0m")
+        if not self.hide_urls:
+            print(f"   \033[30m╷\033[0m Web page: \033[96m{web_page}\033[0m")
+            print(f"   \033[30m╵\033[0m Lesson data: \033[96m{self.url}/admin/content/lessons/{lesson.id}\033[0m")
 
     def _push(self, lesson: Lesson, log):
         """
