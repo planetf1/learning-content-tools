@@ -38,11 +38,44 @@ def get_api_name():
     print("Trying again...")
     return get_api_name()
 
+def get_switch(switch, pop=True):
+    """
+    Return True if switch in sys.argv, else False
+    If `pop`, also remove switch from sys.argv
+    """
+    if switch not in sys.argv:
+        return False
+    if pop:
+        sys.argv.remove(switch)
+    return True
+
+def check_for_unrecognized_switches():
+    for arg in sys.argv:
+        if arg.startswith("-"):
+            print(f"Unsupported argument: \"{arg}\"")
+            sys.exit(1)
+
 
 def sync_lessons():
-    print()
+    if get_switch("--help"):
+        print(
+            "Usage: sync-notebooks [ path(s)/to/specific/notebook(s) ]\n"
+            "Optional switches:\n"
+            "  --hide-urls:  Don't print URLs after uploading a lesson\n"
+            "  --help: Show this message and exit"
+        )
+        sys.exit()
+    hide_urls = get_switch("--hide-urls")
+    check_for_unrecognized_switches()
+    
+
     api_name = get_api_name()
-    api = API(api_name, API_URLS[api_name], WEBSITE_URLS[api_name])
+    api = API(
+        name=api_name,
+        api_url=API_URLS[api_name],
+        website_url=WEBSITE_URLS[api_name],
+        hide_urls=hide_urls
+    )
 
     lesson_ids = parse_yaml(api_name)
     if len(sys.argv) > 1:
