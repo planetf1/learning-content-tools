@@ -72,7 +72,10 @@ def parse_yaml(api_name):
     output = {}
     for lesson in api_info["lessons"]:
         path = lesson["path"]
-        lesson_id = lesson[f"id{api_name.lower().capitalize()}"]
+        lesson_id = lesson.get(f"id{api_name.lower().capitalize()}", None)
+        if lesson_id is None:
+            print(f"ℹ️ No ID found for {path}; skipping")
+            continue
         output[path] = lesson_id
 
     return output
