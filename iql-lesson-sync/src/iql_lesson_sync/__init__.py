@@ -1,5 +1,6 @@
 import sys
 import os
+import logging
 import yaml
 from pathlib import Path
 from .upload import Lesson, API
@@ -55,6 +56,20 @@ def check_for_unrecognized_switches():
             print(f"Unsupported argument: \"{arg}\"")
             sys.exit(1)
 
+def setup_logging():
+    debugLevel = os.environ.get("LEARNING_API_LOGGING", logging.NOTSET)
+    # Only setup logging if necessary
+    if (debugLevel != logging.NOTSET):
+        logging.basicConfig()
+        logging.getLogger().setLevel(debugLevel)
+        req_log = logging.getLogger('requests.packages.urllib3')
+        req_log.setLevel(debugLevel)
+        req_log.propagate = True
+        # Additional request/response logging - set this if DEBUG logging requested
+        if (debugLevel == logging.DEBUG):
+            httplib.HTTPConnection.debuglevel = 1
+
+
 
 def sync_lessons():
     if get_switch("--help"):
@@ -68,6 +83,8 @@ def sync_lessons():
     hide_urls = get_switch("--hide-urls")
     check_for_unrecognized_switches()
     
+    # configure logging
+    setup_logging()
 
     api_name = get_api_name()
     api = API(

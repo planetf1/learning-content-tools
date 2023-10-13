@@ -5,6 +5,7 @@ from pathlib import Path
 from getpass import getpass
 import random
 import requests
+import logging
 import sys
 from yaspin import yaspin
 from yaspin.spinners import Spinners
